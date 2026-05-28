@@ -1,9 +1,9 @@
 import { Outlet, useLocation } from "react-router";
-import { BottomNav } from "../components/BottomNav";
+import { BottomNav } from "@/components/layout/BottomNav";
 
 const HIDE_NAV_PREFIXES = ["/upload", "/user/"];
 
-export function AppLayout() {
+export function MainLayout() {
   const { pathname } = useLocation();
   const showNav = !HIDE_NAV_PREFIXES.some((p) => pathname.startsWith(p));
 

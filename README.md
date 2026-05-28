@@ -1,8 +1,22 @@
 # TikTok 前端
 
-TikTok / 抖音风格短视频 UI（React + Vite + Tailwind），源自 Figma [TikTok项目构建](https://www.figma.com/design/Mnkon4GktmuY7wtSSjTYkJ/TikTok%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA)。
+React + Vite + Tailwind 短视频 UI。
 
-后端仓库：[tiktok-backend](https://github.com/LoveMuZiLi/tiktok-backend)
+## 工程结构
+
+见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
+
+```
+src/
+├── app/           # 入口
+├── router/        # 路由
+├── layouts/       # 布局
+├── pages/         # 页面（按模块分目录）
+├── components/    # 组件（layout / business / common）
+├── shared/        # api、types、ui
+├── assets/
+└── styles/
+```
 
 ## 开发
 
@@ -11,16 +25,11 @@ npm install
 npm run dev
 ```
 
-开发环境 `/api` 代理到 `http://localhost:8080`（需本地启动后端）。
-
-## 环境变量
+## 生产构建
 
 ```bash
-cp .env.example .env
+export VITE_API_BASE_URL=
+npm run build
 ```
 
-生产构建 **`VITE_API_BASE_URL` 留空**（见 `.env.production.example`）：页面与 API 同域，由 Nginx `:8088` 将 `/api` 转发到服务器上的 Go 后端。
-
-## CI
-
-推送至 `main` 时 GitHub Actions 自动执行 `npm install` 与 `npm run build`。
+后端仓库：[tiktok-backend](https://github.com/LoveMuZiLi/tiktok-backend)

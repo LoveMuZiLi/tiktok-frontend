@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { fetchVideoFeed } from "@/lib/api";
-import type { Video } from "@/types/video";
-import { VideoCard } from "../components/VideoCard";
-import { paths } from "../routes/paths";
+import { fetchVideoFeed } from "@/shared/api";
+import type { Video } from "@/shared/types/video";
+import { VideoCard } from "@/components/business/VideoCard";
+import { paths } from "@/router/paths";
 
 const baseVideos: Video[] = [
   {

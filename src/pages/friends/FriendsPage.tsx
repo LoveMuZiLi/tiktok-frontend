@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { VideoCard } from "./VideoCard";
+import { VideoCard } from "@/components/business/VideoCard";
 
 type FriendsTab = "following" | "friends";
 

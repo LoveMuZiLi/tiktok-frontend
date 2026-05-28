@@ -1,6 +1,6 @@
 import { Menu, Share2, Edit3, Bookmark, Lock, Heart, Play } from "lucide-react";
 import { useState } from "react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 
 const works = [
   { id: 1, image: "https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=400&h=600&fit=crop", views: "12.8w" },

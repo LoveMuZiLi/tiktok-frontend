@@ -13,8 +13,8 @@ import {
   MoreHorizontal,
   Plus,
 } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { paths } from "../routes/paths";
+import { ImageWithFallback } from "@/components/common/ImageWithFallback";
+import { paths } from "@/router/paths";
 
 interface Story {
   id: number;

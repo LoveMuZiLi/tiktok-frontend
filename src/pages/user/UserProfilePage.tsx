@@ -1,10 +1,10 @@
 import { useNavigate, useParams, useLocation } from "react-router";
-import { FriendProfilePage } from "../components/FriendProfilePage";
-import { paths } from "../routes/paths";
+import { FriendProfilePage } from "@/pages/user/FriendProfilePage";
+import { paths } from "@/router/paths";
 
 type FriendState = { name: string; avatar: string };
 
-export function FriendProfileRoute() {
+export function UserProfilePage() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const location = useLocation();

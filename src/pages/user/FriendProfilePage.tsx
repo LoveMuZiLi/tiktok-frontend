@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, Share2, UserPlus, MessageCircle, Play, Heart, Lock } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 
 interface FriendInfo {
   id: number;

@@ -1,6 +1,6 @@
 import { Home, Users, PlusSquare, MessageCircleMore, User } from "lucide-react";
 import { NavLink, useNavigate } from "react-router";
-import { paths } from "../routes/paths";
+import { paths } from "@/router/paths";
 
 const navItems = [
   { to: paths.home, icon: Home, label: "首页", end: true },
