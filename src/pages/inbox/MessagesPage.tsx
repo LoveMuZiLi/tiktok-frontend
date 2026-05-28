@@ -147,17 +147,19 @@ export function MessagesPage() {
         </div>
       </div>
 
-      <div className="px-3 pt-3 pb-4 overflow-x-auto scrollbar-hide">
-        <div className="flex items-start gap-3 min-w-max">
+      <div className="overflow-x-auto px-3 pb-5 pt-3 scrollbar-hide">
+        <div className="flex min-w-max items-start gap-3 py-1">
           <button type="button" className="flex flex-col items-center gap-1.5 w-16">
-            <div className="relative w-16 h-16 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
-              <ImageWithFallback
-                src="https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=200&h=200&fit=crop"
-                alt="创建"
-                className="w-full h-full object-cover opacity-70"
-              />
-              <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#20d5ec] border-2 border-black flex items-center justify-center">
-                <Plus className="w-3 h-3 text-white" strokeWidth={3} />
+            <div className="relative h-16 w-16 shrink-0">
+              <div className="h-16 w-16 overflow-hidden rounded-full bg-white/10">
+                <ImageWithFallback
+                  src="https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=200&h=200&fit=crop"
+                  alt="创建"
+                  className="h-full w-full object-cover opacity-70"
+                />
+              </div>
+              <div className="absolute bottom-0 right-0 z-10 flex h-5 w-5 items-center justify-center rounded-full border-2 border-black bg-[#20d5ec]">
+                <Plus className="h-3 w-3 text-white" strokeWidth={3} />
               </div>
             </div>
             <span className="text-xs">创建</span>

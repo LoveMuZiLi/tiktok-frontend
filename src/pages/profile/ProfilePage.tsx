@@ -5,6 +5,7 @@ import { fetchUserProfile, fetchVideoFeed } from "@/shared/api/client";
 import { CURRENT_USER_ID } from "@/shared/constants";
 import type { UserProfile } from "@/shared/types/user";
 import type { Video } from "@/shared/types/video";
+import { formatCount } from "@/shared/utils/formatCount";
 
 const tabs = [
   { id: "works", icon: Play, label: "作品" },
@@ -12,11 +13,6 @@ const tabs = [
   { id: "favorites", icon: Bookmark, label: "收藏" },
   { id: "likes", icon: Heart, label: "喜欢" },
 ];
-
-function formatCount(n: number): string {
-  if (n >= 10000) return `${(n / 10000).toFixed(1)}w`;
-  return String(n);
-}
 
 export function ProfilePage() {
   const [activeTab, setActiveTab] = useState("works");
@@ -55,7 +51,7 @@ export function ProfilePage() {
 
         <div className="flex items-center gap-8 mt-5">
           <div className="text-center">
-            <div className="text-base">{profile?.followingCount ?? 0}</div>
+            <div className="text-base">{formatCount(profile?.followingCount ?? 0)}</div>
             <div className="text-xs text-white/55">关注</div>
           </div>
           <div className="text-center">

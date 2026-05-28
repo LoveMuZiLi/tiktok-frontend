@@ -1,4 +1,9 @@
-import type { Video, VideoFeedResponse } from "@/shared/types/video";
+import type {
+  InteractionStatus,
+  Video,
+  VideoComment,
+  VideoFeedResponse,
+} from "@/shared/types/video";
 import type { User, UserProfile } from "@/shared/types/user";
 import type { Chat, Message, Notification } from "@/shared/types/inbox";
 import { CURRENT_USER_ID } from "@/shared/constants";
@@ -84,8 +89,65 @@ export function deleteVideo(id: number): Promise<void> {
   return request<void>(`/api/v1/videos/${id}`, { method: "DELETE" });
 }
 
+export function fetchInteractionStatus(
+  videoId: number,
+): Promise<InteractionStatus> {
+  return request<InteractionStatus>(
+    withUserId(`/api/v1/videos/${videoId}/interactions/status`),
+  );
+}
+
 export function likeVideo(id: number): Promise<Video> {
-  return request<Video>(`/api/v1/videos/${id}/like`, { method: "POST" });
+  return request<Video>(withUserId(`/api/v1/videos/${id}/like`), {
+    method: "POST",
+  });
+}
+
+export function unlikeVideo(id: number): Promise<Video> {
+  return request<Video>(withUserId(`/api/v1/videos/${id}/like`), {
+    method: "DELETE",
+  });
+}
+
+export function favoriteVideo(id: number): Promise<Video> {
+  return request<Video>(withUserId(`/api/v1/videos/${id}/favorite`), {
+    method: "POST",
+  });
+}
+
+export function unfavoriteVideo(id: number): Promise<Video> {
+  return request<Video>(withUserId(`/api/v1/videos/${id}/favorite`), {
+    method: "DELETE",
+  });
+}
+
+export function shareVideo(id: number): Promise<Video> {
+  return request<Video>(withUserId(`/api/v1/videos/${id}/share`), {
+    method: "POST",
+  });
+}
+
+export function fetchVideoComments(
+  videoId: number,
+  params?: { offset?: number; limit?: number },
+): Promise<{ items: VideoComment[]; total: number }> {
+  const qs = new URLSearchParams();
+  if (params?.offset != null) qs.set("offset", String(params.offset));
+  if (params?.limit != null) qs.set("limit", String(params.limit));
+  const q = qs.toString();
+  return request(
+    `/api/v1/videos/${videoId}/comments${q ? `?${q}` : ""}`,
+  );
+}
+
+export function createVideoComment(
+  videoId: number,
+  content: string,
+): Promise<VideoComment> {
+  return request<VideoComment>(withUserId(`/api/v1/videos/${videoId}/comments`), {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
 }
 
 // --- Users ---
