@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router";
 import {
   UserPlus,
   Search,
@@ -13,6 +14,7 @@ import {
   Plus,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { paths } from "../routes/paths";
 
 interface Story {
   id: number;
@@ -38,6 +40,8 @@ interface Message {
   time: string;
 }
 
+type ChatLocationState = { name?: string; avatar?: string };
+
 const stories: Story[] = [
   { id: 1, name: "往昔今日", avatar: "https://images.unsplash.com/photo-1733473571611-2cf5460d91fc?w=200&h=200&fit=crop", hasNew: true },
   { id: 2, name: "DramaMindFa...", avatar: "https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=200&h=200&fit=crop" },
@@ -61,34 +65,42 @@ const demoMessages: Message[] = [
   { id: 4, text: "主要是光线和角度，找自然光好的地方很重要", isMine: true, time: "10:28" },
 ];
 
-interface MessagesPageProps {
-  onViewProfile?: (friend: { id: number; name: string; avatar: string }) => void;
-  initialChat?: { name: string; avatar: string };
+function resolveChat(chatId: string | undefined, state: ChatLocationState | null): Chat | null {
+  if (!chatId) return null;
+  const id = Number(chatId);
+  const fromList = chats.find((c) => c.id === id);
+  if (fromList) return fromList;
+  if (state?.name && state?.avatar) {
+    return { id, name: state.name, avatar: state.avatar, message: "", time: "", unread: 0 };
+  }
+  return null;
 }
 
-export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) {
-  const [view, setView] = useState<"main" | "chatDetail">(initialChat ? "chatDetail" : "main");
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(
-    initialChat
-      ? { id: 0, name: initialChat.name, avatar: initialChat.avatar, message: "", time: "", unread: 0 }
-      : null
-  );
+export function MessagesPage() {
+  const navigate = useNavigate();
+  const { chatId } = useParams<{ chatId: string }>();
+  const location = useLocation();
+  const routeState = location.state as ChatLocationState | null;
+  const selectedChat = resolveChat(chatId, routeState);
   const [messageInput, setMessageInput] = useState("");
 
-  // 聊天详情视图
-  if (view === "chatDetail" && selectedChat) {
+  const openProfile = (friend: { id: number; name: string; avatar: string }) => {
+    navigate(paths.user(friend.id), { state: { name: friend.name, avatar: friend.avatar } });
+  };
+
+  if (selectedChat) {
     return (
       <div className="h-full w-full bg-black text-white flex flex-col">
         <div className="sticky top-0 z-10 bg-black border-b border-white/10">
           <div className="grid grid-cols-[auto_1fr_auto] items-center px-2 h-14">
-            <button onClick={() => setView("main")} className="p-2">
+            <button type="button" onClick={() => navigate(paths.inbox)} className="p-2">
               <ChevronLeft className="w-6 h-6" />
             </button>
             <div className="flex flex-col items-center justify-center min-w-0">
               <span className="font-medium truncate">{selectedChat.name}</span>
               <span className="text-[10px] text-white/40">在线</span>
             </div>
-            <button className="p-2">
+            <button type="button" className="p-2">
               <MoreHorizontal className="w-6 h-6" />
             </button>
           </div>
@@ -116,7 +128,7 @@ export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) 
               placeholder="发送消息..."
               className="flex-1 bg-white/10 text-white placeholder-white/40 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:bg-white/15"
             />
-            <button className="w-9 h-9 rounded-full bg-[#fe2c55] flex items-center justify-center">
+            <button type="button" className="w-9 h-9 rounded-full bg-[#fe2c55] flex items-center justify-center">
               <Send className="w-4 h-4 text-white" fill="white" />
             </button>
           </div>
@@ -125,30 +137,26 @@ export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) 
     );
   }
 
-  // 主视图：收件箱
   return (
     <div className="h-full w-full bg-black text-white overflow-y-auto pb-20">
-      {/* 顶部导航栏 */}
       <div className="sticky top-0 z-10 bg-black/95 backdrop-blur-sm">
         <div className="grid grid-cols-[auto_1fr_auto] items-center px-4 h-12">
-          <button className="p-1">
+          <button type="button" className="p-1">
             <UserPlus className="w-6 h-6" />
           </button>
-          <button className="flex items-center justify-center gap-1">
+          <button type="button" className="flex items-center justify-center gap-1">
             <span className="font-semibold">收件箱</span>
             <ChevronDown className="w-4 h-4 text-white/60" />
           </button>
-          <button className="p-1">
+          <button type="button" className="p-1">
             <Search className="w-6 h-6" />
           </button>
         </div>
       </div>
 
-      {/* 横向 Story 行 */}
       <div className="px-3 pt-3 pb-4 overflow-x-auto scrollbar-hide">
         <div className="flex items-start gap-3 min-w-max">
-          {/* 创建 */}
-          <button className="flex flex-col items-center gap-1.5 w-16">
+          <button type="button" className="flex flex-col items-center gap-1.5 w-16">
             <div className="relative w-16 h-16 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
               <ImageWithFallback
                 src="https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=200&h=200&fit=crop"
@@ -163,13 +171,14 @@ export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) 
           </button>
 
           {stories.map((story) => (
-            <button key={story.id} onClick={() => onViewProfile?.(story)} className="flex flex-col items-center gap-1.5 w-16">
+            <button
+              key={story.id}
+              type="button"
+              onClick={() => openProfile(story)}
+              className="flex flex-col items-center gap-1.5 w-16"
+            >
               <div className="relative w-16 h-16 rounded-full overflow-hidden">
-                <ImageWithFallback
-                  src={story.avatar}
-                  alt={story.name}
-                  className="w-full h-full object-cover"
-                />
+                <ImageWithFallback src={story.avatar} alt={story.name} className="w-full h-full object-cover" />
                 {story.hasNew && (
                   <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-[#fe2c55] border-2 border-black" />
                 )}
@@ -180,9 +189,7 @@ export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) 
         </div>
       </div>
 
-      {/* 聚合通知与会话列表 */}
       <div>
-        {/* 新粉丝 */}
         <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
           <div className="w-12 h-12 rounded-full bg-[#20d5ec] flex items-center justify-center flex-shrink-0">
             <Users className="w-6 h-6 text-white" fill="white" />
@@ -193,7 +200,6 @@ export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) 
           </div>
         </div>
 
-        {/* 活动 */}
         <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
           <div className="w-12 h-12 rounded-full bg-[#fe2c55] flex items-center justify-center flex-shrink-0">
             <Heart className="w-6 h-6 text-white" fill="white" />
@@ -204,21 +210,16 @@ export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) 
           </div>
         </div>
 
-        {/* 私信列表 */}
         {chats.map((chat) => (
           <div
             key={chat.id}
-            onClick={() => {
-              setSelectedChat(chat);
-              setView("chatDetail");
-            }}
-            className="flex items-center gap-3 px-4 py-3 active:bg-white/5"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(paths.inboxChat(chat.id))}
+            onKeyDown={(e) => e.key === "Enter" && navigate(paths.inboxChat(chat.id))}
+            className="flex items-center gap-3 px-4 py-3 active:bg-white/5 cursor-pointer"
           >
-            <ImageWithFallback
-              src={chat.avatar}
-              alt={chat.name}
-              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-            />
+            <ImageWithFallback src={chat.avatar} alt={chat.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">{chat.name}</div>
               <div className="text-xs text-white/55 truncate mt-0.5">{chat.message}</div>
@@ -233,7 +234,6 @@ export function MessagesPage({ onViewProfile, initialChat }: MessagesPageProps) 
           </div>
         ))}
 
-        {/* 系统通知 */}
         <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
           <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
             <Inbox className="w-6 h-6 text-white" />

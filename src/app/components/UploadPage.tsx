@@ -1,14 +1,13 @@
 import { X, Image as ImageIcon, Music, Zap, Timer, SwitchCamera, Sparkles } from "lucide-react";
 import { useState } from "react";
-
-interface UploadPageProps {
-  onClose: () => void;
-}
+import { useNavigate } from "react-router";
 
 const modes = ["拍照", "拍15秒", "拍60秒", "影集", "直播"];
 
-export function UploadPage({ onClose }: UploadPageProps) {
+export function UploadPage() {
+  const navigate = useNavigate();
   const [activeMode, setActiveMode] = useState("拍15秒");
+  const onClose = () => navigate(-1);
 
   return (
     <div className="fixed inset-0 z-[60] bg-black text-white flex flex-col">
