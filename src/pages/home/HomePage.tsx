@@ -8,6 +8,7 @@ import { paths } from "@/router/paths";
 const baseVideos: Video[] = [
   {
     id: 1,
+    userId: 2,
     username: "fashion_daily",
     avatar: "https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=100&h=100&fit=crop",
     description: "今天的穿搭分享 🌸 喜欢记得点赞哦~",
@@ -19,6 +20,7 @@ const baseVideos: Video[] = [
   },
   {
     id: 2,
+    userId: 3,
     username: "beauty_tips",
     avatar: "https://images.unsplash.com/photo-1583318605147-8e52610d9c75?w=100&h=100&fit=crop",
     description: "超简单的妆容教程 💄 新手也能学会！",
@@ -30,6 +32,7 @@ const baseVideos: Video[] = [
   },
   {
     id: 3,
+    userId: 4,
     username: "photo_artist",
     avatar: "https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=100&h=100&fit=crop",
     description: "记录生活的美好瞬间 📷✨",
@@ -41,6 +44,7 @@ const baseVideos: Video[] = [
   },
   {
     id: 4,
+    userId: 5,
     username: "urban_life",
     avatar: "https://images.unsplash.com/photo-1733473571611-2cf5460d91fc?w=100&h=100&fit=crop",
     description: "城市夜景太美了 🌃 你最喜欢哪座城市？",
@@ -52,6 +56,7 @@ const baseVideos: Video[] = [
   },
   {
     id: 5,
+    userId: 6,
     username: "nature_lover",
     avatar: "https://images.unsplash.com/photo-1728046666871-7ff531542fb1?w=100&h=100&fit=crop",
     description: "大自然的治愈力量 🌿 放慢脚步，享受当下",
@@ -67,7 +72,7 @@ function buildBatch(startId: number, count: number): Video[] {
   const out: Video[] = [];
   for (let i = 0; i < count; i++) {
     const src = baseVideos[(startId + i) % baseVideos.length];
-    out.push({ ...src, id: startId + i + 1 });
+    out.push({ ...src, id: startId + i + 1, userId: src.userId });
   }
   return out;
 }
@@ -114,9 +119,10 @@ export function HomePage() {
       {videos.map((video) => (
         <VideoCard
           key={video.id}
+          videoId={video.id}
           {...video}
           onViewProfile={() =>
-            navigate(paths.user(video.id), {
+            navigate(paths.user(video.userId || video.id), {
               state: { name: video.username, avatar: video.avatar },
             })
           }

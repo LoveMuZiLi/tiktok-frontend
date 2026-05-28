@@ -1,7 +1,9 @@
 import { Heart, MessageCircle, Share2, Music, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
+import { likeVideo } from "@/shared/api/client";
 
 interface VideoCardProps {
+  videoId?: number;
   username: string;
   avatar: string;
   description: string;
@@ -14,6 +16,7 @@ interface VideoCardProps {
 }
 
 export function VideoCard({
+  videoId,
   username,
   avatar,
   description,
@@ -27,13 +30,22 @@ export function VideoCard({
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
 
-  const handleLike = () => {
-    if (isLiked) {
-      setLikeCount(likeCount - 1);
-    } else {
-      setLikeCount(likeCount + 1);
+  const handleLike = async () => {
+    if (isLiked || !videoId) {
+      if (isLiked) {
+        setLikeCount(likeCount - 1);
+        setIsLiked(false);
+      }
+      return;
     }
-    setIsLiked(!isLiked);
+    try {
+      const updated = await likeVideo(videoId);
+      setLikeCount(updated.likes);
+      setIsLiked(true);
+    } catch {
+      setLikeCount(likeCount + 1);
+      setIsLiked(true);
+    }
   };
 
   return (

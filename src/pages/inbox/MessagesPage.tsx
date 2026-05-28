@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router";
 import {
   UserPlus,
@@ -15,80 +15,64 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { paths } from "@/router/paths";
-
-interface Story {
-  id: number;
-  name: string;
-  avatar: string;
-  hasNew?: boolean;
-}
-
-interface Chat {
-  id: number;
-  name: string;
-  avatar: string;
-  message: string;
-  time: string;
-  unread: number;
-  hasCamera?: boolean;
-}
-
-interface Message {
-  id: number;
-  text: string;
-  isMine: boolean;
-  time: string;
-}
+import {
+  fetchChats,
+  fetchMessages,
+  fetchNotifications,
+  sendMessage,
+} from "@/shared/api/client";
+import type { Chat, Message, Notification } from "@/shared/types/inbox";
 
 type ChatLocationState = { name?: string; avatar?: string };
-
-const stories: Story[] = [
-  { id: 1, name: "往昔今日", avatar: "https://images.unsplash.com/photo-1733473571611-2cf5460d91fc?w=200&h=200&fit=crop", hasNew: true },
-  { id: 2, name: "DramaMindFa...", avatar: "https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=200&h=200&fit=crop" },
-  { id: 3, name: "啦啦", avatar: "https://images.unsplash.com/photo-1583318605147-8e52610d9c75?w=200&h=200&fit=crop" },
-  { id: 4, name: "时尚日记", avatar: "https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=200&h=200&fit=crop" },
-  { id: 5, name: "自然爱好者", avatar: "https://images.unsplash.com/photo-1728046666871-7ff531542fb1?w=200&h=200&fit=crop" },
-];
-
-const chats: Chat[] = [
-  { id: 1, name: "kkkkkk_y", avatar: "https://images.unsplash.com/photo-1583318605147-8e52610d9c75?w=100&h=100&fit=crop", message: "发送于 3 天前", time: "3天", unread: 0, hasCamera: true },
-  { id: 2, name: "Gang of three", avatar: "https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=100&h=100&fit=crop", message: "你分享了视频 · 3天", time: "3天", unread: 0, hasCamera: true },
-  { id: 3, name: "DramaMindFactory", avatar: "https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=100&h=100&fit=crop&sat=-30", message: "发送于 3 天前", time: "3天", unread: 0, hasCamera: true },
-  { id: 4, name: "啦啦", avatar: "https://images.unsplash.com/photo-1583318605147-8e52610d9c75?w=100&h=100&fit=crop&sat=-20", message: "发送于 6 天前", time: "6天", unread: 0, hasCamera: true },
-  { id: 5, name: "时尚日记", avatar: "https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=100&h=100&fit=crop", message: "你的视频拍得太棒了！", time: "刚刚", unread: 2, hasCamera: true },
-];
-
-const demoMessages: Message[] = [
-  { id: 1, text: "你好！看到你的视频了，拍得真棒！", isMine: false, time: "10:23" },
-  { id: 2, text: "谢谢！😊", isMine: true, time: "10:24" },
-  { id: 3, text: "能分享一下拍摄技巧吗？", isMine: false, time: "10:26" },
-  { id: 4, text: "主要是光线和角度，找自然光好的地方很重要", isMine: true, time: "10:28" },
-];
-
-function resolveChat(chatId: string | undefined, state: ChatLocationState | null): Chat | null {
-  if (!chatId) return null;
-  const id = Number(chatId);
-  const fromList = chats.find((c) => c.id === id);
-  if (fromList) return fromList;
-  if (state?.name && state?.avatar) {
-    return { id, name: state.name, avatar: state.avatar, message: "", time: "", unread: 0 };
-  }
-  return null;
-}
 
 export function MessagesPage() {
   const navigate = useNavigate();
   const { chatId } = useParams<{ chatId: string }>();
   const location = useLocation();
   const routeState = location.state as ChatLocationState | null;
-  const selectedChat = resolveChat(chatId, routeState);
+
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
+  const [chatTitle, setChatTitle] = useState("");
+
+  const convId = chatId ? Number(chatId) : 0;
+
+  useEffect(() => {
+    fetchChats().then(setChats).catch(() => setChats([]));
+    fetchNotifications().then(setNotifications).catch(() => setNotifications([]));
+  }, []);
+
+  useEffect(() => {
+    if (!convId) return;
+    const chat = chats.find((c) => c.id === convId);
+    setChatTitle(chat?.name ?? routeState?.name ?? "聊天");
+    fetchMessages(convId)
+      .then(setMessages)
+      .catch(() => setMessages([]));
+  }, [convId, chats, routeState?.name]);
 
   const openProfile = (friend: { id: number; name: string; avatar: string }) => {
     navigate(paths.user(friend.id), { state: { name: friend.name, avatar: friend.avatar } });
   };
 
-  if (selectedChat) {
+  const handleSend = async () => {
+    if (!messageInput.trim() || !convId) return;
+    const text = messageInput.trim();
+    setMessageInput("");
+    try {
+      const msg = await sendMessage(convId, text);
+      setMessages((prev) => [...prev, msg]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now(), text, isMine: true, time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }) },
+      ]);
+    }
+  };
+
+  if (convId) {
     return (
       <div className="h-full w-full bg-black text-white flex flex-col">
         <div className="sticky top-0 z-10 bg-black border-b border-white/10">
@@ -97,7 +81,7 @@ export function MessagesPage() {
               <ChevronLeft className="w-6 h-6" />
             </button>
             <div className="flex flex-col items-center justify-center min-w-0">
-              <span className="font-medium truncate">{selectedChat.name}</span>
+              <span className="font-medium truncate">{chatTitle}</span>
               <span className="text-[10px] text-white/40">在线</span>
             </div>
             <button type="button" className="p-2">
@@ -107,9 +91,9 @@ export function MessagesPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-          {demoMessages.map((msg) => (
+          {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.isMine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[70%] ${msg.isMine ? "items-end" : "items-start"} flex flex-col gap-1`}>
+              <div className={`max-w-[70%] flex flex-col gap-1 ${msg.isMine ? "items-end" : "items-start"}`}>
                 <div className={`px-4 py-2.5 rounded-2xl ${msg.isMine ? "bg-[#fe2c55] text-white" : "bg-white/10 text-white"}`}>
                   <p className="text-sm leading-relaxed">{msg.text}</p>
                 </div>
@@ -125,10 +109,15 @@ export function MessagesPage() {
               type="text"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="发送消息..."
               className="flex-1 bg-white/10 text-white placeholder-white/40 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:bg-white/15"
             />
-            <button type="button" className="w-9 h-9 rounded-full bg-[#fe2c55] flex items-center justify-center">
+            <button
+              type="button"
+              onClick={handleSend}
+              className="w-9 h-9 rounded-full bg-[#fe2c55] flex items-center justify-center"
+            >
               <Send className="w-4 h-4 text-white" fill="white" />
             </button>
           </div>
@@ -136,6 +125,10 @@ export function MessagesPage() {
       </div>
     );
   }
+
+  const followNotifs = notifications.filter((n) => n.type === "follow");
+  const activityNotifs = notifications.filter((n) => n.type === "activity");
+  const systemNotifs = notifications.filter((n) => n.type === "system");
 
   return (
     <div className="h-full w-full bg-black text-white overflow-y-auto pb-20">
@@ -170,45 +163,49 @@ export function MessagesPage() {
             <span className="text-xs">创建</span>
           </button>
 
-          {stories.map((story) => (
+          {chats.map((chat) => (
             <button
-              key={story.id}
+              key={chat.id}
               type="button"
-              onClick={() => openProfile(story)}
+              onClick={() => openProfile({ id: chat.peerId, name: chat.name, avatar: chat.avatar })}
               className="flex flex-col items-center gap-1.5 w-16"
             >
               <div className="relative w-16 h-16 rounded-full overflow-hidden">
-                <ImageWithFallback src={story.avatar} alt={story.name} className="w-full h-full object-cover" />
-                {story.hasNew && (
+                <ImageWithFallback src={chat.avatar} alt={chat.name} className="w-full h-full object-cover" />
+                {chat.unread > 0 && (
                   <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-[#fe2c55] border-2 border-black" />
                 )}
               </div>
-              <span className="text-xs truncate w-full text-center">{story.name}</span>
+              <span className="text-xs truncate w-full text-center">{chat.name}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
-          <div className="w-12 h-12 rounded-full bg-[#20d5ec] flex items-center justify-center flex-shrink-0">
-            <Users className="w-6 h-6 text-white" fill="white" />
+        {followNotifs[0] && (
+          <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
+            <div className="w-12 h-12 rounded-full bg-[#20d5ec] flex items-center justify-center flex-shrink-0">
+              <Users className="w-6 h-6 text-white" fill="white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium">{followNotifs[0].title}</div>
+              <div className="text-xs text-white/55 truncate mt-0.5">{followNotifs[0].body}</div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium">新粉丝</div>
-            <div className="text-xs text-white/55 truncate mt-0.5">DramaMindFactory 关注了你。</div>
-          </div>
-        </div>
+        )}
 
-        <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
-          <div className="w-12 h-12 rounded-full bg-[#fe2c55] flex items-center justify-center flex-shrink-0">
-            <Heart className="w-6 h-6 text-white" fill="white" />
+        {activityNotifs[0] && (
+          <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
+            <div className="w-12 h-12 rounded-full bg-[#fe2c55] flex items-center justify-center flex-shrink-0">
+              <Heart className="w-6 h-6 text-white" fill="white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium">{activityNotifs[0].title}</div>
+              <div className="text-xs text-white/55 truncate mt-0.5">{activityNotifs[0].body}</div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium">活动</div>
-            <div className="text-xs text-white/55 truncate mt-0.5">Im andreiaaa!! 查看了你的主页。</div>
-          </div>
-        </div>
+        )}
 
         {chats.map((chat) => (
           <div
@@ -234,16 +231,18 @@ export function MessagesPage() {
           </div>
         ))}
 
-        <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
-          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-            <Inbox className="w-6 h-6 text-white" />
+        {systemNotifs[0] && (
+          <div className="flex items-center gap-3 px-4 py-3 active:bg-white/5">
+            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+              <Inbox className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium">{systemNotifs[0].title}</div>
+              <div className="text-xs text-white/55 truncate mt-0.5">{systemNotifs[0].body}</div>
+            </div>
+            {!systemNotifs[0].isRead && <div className="w-2 h-2 rounded-full bg-[#fe2c55] flex-shrink-0" />}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium">系统通知</div>
-            <div className="text-xs text-white/55 truncate mt-0.5">直播: 观众希望看到你的更多内容 · 3天</div>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-[#fe2c55] flex-shrink-0" />
-        </div>
+        )}
       </div>
     </div>
   );

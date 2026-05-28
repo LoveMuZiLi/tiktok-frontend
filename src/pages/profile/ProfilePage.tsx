@@ -1,15 +1,10 @@
 import { Menu, Share2, Edit3, Bookmark, Lock, Heart, Play } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
-
-const works = [
-  { id: 1, image: "https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=400&h=600&fit=crop", views: "12.8w" },
-  { id: 2, image: "https://images.unsplash.com/photo-1583318605147-8e52610d9c75?w=400&h=600&fit=crop", views: "25.6w" },
-  { id: 3, image: "https://images.unsplash.com/photo-1676288785587-0d4398fbf38e?w=400&h=600&fit=crop", views: "8.9w" },
-  { id: 4, image: "https://images.unsplash.com/photo-1733473571611-2cf5460d91fc?w=400&h=600&fit=crop", views: "44.5w" },
-  { id: 5, image: "https://images.unsplash.com/photo-1728046666871-7ff531542fb1?w=400&h=600&fit=crop", views: "16.7w" },
-  { id: 6, image: "https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=400&h=600&fit=crop&sat=-50", views: "5.2w" },
-];
+import { fetchUserProfile, fetchVideoFeed } from "@/shared/api/client";
+import { CURRENT_USER_ID } from "@/shared/constants";
+import type { UserProfile } from "@/shared/types/user";
+import type { Video } from "@/shared/types/video";
 
 const tabs = [
   { id: "works", icon: Play, label: "作品" },
@@ -18,8 +13,26 @@ const tabs = [
   { id: "likes", icon: Heart, label: "喜欢" },
 ];
 
+function formatCount(n: number): string {
+  if (n >= 10000) return `${(n / 10000).toFixed(1)}w`;
+  return String(n);
+}
+
 export function ProfilePage() {
   const [activeTab, setActiveTab] = useState("works");
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [works, setWorks] = useState<Video[]>([]);
+
+  useEffect(() => {
+    fetchUserProfile(CURRENT_USER_ID)
+      .then(setProfile)
+      .catch(() => setProfile(null));
+    fetchVideoFeed({ feed: "user", targetId: CURRENT_USER_ID, limit: 30 })
+      .then(setWorks)
+      .catch(() => setWorks([]));
+  }, []);
+
+  const user = profile?.user;
 
   return (
     <div className="h-full w-full bg-black text-white overflow-y-auto pb-20">
@@ -31,24 +44,26 @@ export function ProfilePage() {
 
       <div className="px-4 pt-4 flex flex-col items-center">
         <ImageWithFallback
-          src="https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=200&h=200&fit=crop"
+          src={user?.avatar ?? "https://images.unsplash.com/photo-1728046666898-7e42ed206c9f?w=200&h=200&fit=crop"}
           alt="me"
           className="w-24 h-24 rounded-full object-cover"
         />
-        <div className="mt-3 text-base">@my_account</div>
-        <div className="text-sm text-white/55 mt-1">抖音号：12345678</div>
+        <div className="mt-3 text-base">@{user?.username ?? "my_account"}</div>
+        <div className="text-sm text-white/55 mt-1">
+          抖音号：{user?.douyinId ?? "—"}
+        </div>
 
         <div className="flex items-center gap-8 mt-5">
           <div className="text-center">
-            <div className="text-base">128</div>
+            <div className="text-base">{profile?.followingCount ?? 0}</div>
             <div className="text-xs text-white/55">关注</div>
           </div>
           <div className="text-center">
-            <div className="text-base">5.2w</div>
+            <div className="text-base">{formatCount(profile?.followerCount ?? 0)}</div>
             <div className="text-xs text-white/55">粉丝</div>
           </div>
           <div className="text-center">
-            <div className="text-base">18.6w</div>
+            <div className="text-base">{formatCount(profile?.totalLikes ?? 0)}</div>
             <div className="text-xs text-white/55">获赞</div>
           </div>
         </div>
@@ -64,7 +79,7 @@ export function ProfilePage() {
         </div>
 
         <div className="mt-4 text-sm text-white/75 text-center">
-          记录生活，分享美好 ✨
+          {user?.bio ?? "记录生活，分享美好 ✨"}
         </div>
       </div>
 
@@ -81,23 +96,27 @@ export function ProfilePage() {
               }`}
             >
               <Icon className="w-4 h-4" />
-              <span className="text-xs">{t.label}</span>
+              {t.label}
             </button>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-0.5 mt-0.5">
-        {works.map((w) => (
-          <div key={w.id} className="relative aspect-[3/4]">
-            <ImageWithFallback src={w.image} alt="" className="w-full h-full object-cover" />
-            <div className="absolute bottom-1 left-1 flex items-center gap-1 text-xs">
-              <Play className="w-3 h-3" fill="white" />
-              <span>{w.views}</span>
+      {activeTab === "works" ? (
+        <div className="grid grid-cols-3 gap-0.5">
+          {works.map((w) => (
+            <div key={w.id} className="relative aspect-[3/4] bg-white/5">
+              <ImageWithFallback src={w.image} alt="" className="w-full h-full object-cover" />
+              <div className="absolute bottom-1 left-1 text-xs flex items-center gap-0.5">
+                <Play className="w-3 h-3" />
+                {formatCount(w.likes)}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="py-16 text-center text-white/40 text-sm">暂无内容</div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 export interface Video {
   id: number;
+  userId: number;
   username: string;
   avatar: string;
   description: string;
