@@ -1,5 +1,6 @@
 import type { Video, VideoFeedResponse } from "@/types/video";
 
+// 生产：VITE_API_BASE_URL 留空，请求走 /api（Nginx 反代到服务器上的 Go 后端）
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

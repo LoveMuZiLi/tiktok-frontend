@@ -19,7 +19,7 @@ npm run dev
 cp .env.example .env
 ```
 
-生产构建设置 `VITE_API_BASE_URL` 为后端 API 地址。
+生产构建 **`VITE_API_BASE_URL` 留空**（见 `.env.production.example`）：页面与 API 同域，由 Nginx `:8088` 将 `/api` 转发到服务器上的 Go 后端。
 
 ## CI
 
