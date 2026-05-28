@@ -2,6 +2,8 @@
 
 React + Vite + Tailwind 短视频 UI。
 
+与 `tiktok-backend` 放在同一父目录（如 `web/tiktok-frontend` + `web/tiktok-backend`）。全栈说明见上级目录 `tiktok-README.md`。
+
 ## 工程结构
 
 见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
